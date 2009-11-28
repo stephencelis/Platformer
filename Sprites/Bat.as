@@ -13,15 +13,16 @@ package Sprites {
     private var jumping:Boolean = false;
     private var wasJumping:Boolean = jumping;
     private var flyVelocity:int = jumpVelocity;
+    private var hanging:Boolean = false;
 
     public function Bat(x:int, y:int) {
       super(BatImage, x, y, true, true);
 
       // Bounding box.
       offset.x = 5;
-      offset.y = 4;
+      offset.y = 3;
       width = 6;
-      height = 12;
+      height = 13;
 
       // Physics.
       maxVelocity.x = runVelocity;
@@ -34,6 +35,7 @@ package Sprites {
       addAnimation("run", [1, 0, 2, 0], 10);
       addAnimation("fall", [3]);
       addAnimation("jump", [4]);
+      addAnimation("hang", [5]);
     }
 
     override public function update():void {
@@ -50,7 +52,9 @@ package Sprites {
         handleAnimation();
       }
 
-      super.update();
+      if (!hanging) {
+        super.update();
+      }
     }
 
     override public function hitFloor(contact:FlxCore = null):Boolean {
@@ -62,17 +66,35 @@ package Sprites {
       return super.hitFloor(contact);
     }
 
+    override public function hitCeiling(contact:FlxCore = null):Boolean {
+      if (FlxG.keys.UP) {
+        hanging = true;
+        jumping = false;
+        velocity.x = velocity.y = 0;
+      }
+
+      return super.hitCeiling(contact);
+    }
+
     private function handleInput():void {
+      if (hanging) {
+        velocity.y = 0;
+      }
+
       if (FlxG.keys.LEFT) {
         facing = LEFT;
-        acceleration.x -= drag.x;
+        if (!hanging)
+          acceleration.x -= drag.x;
       } else if (FlxG.keys.RIGHT) {
         facing = RIGHT;
-        acceleration.x += drag.x
+        if (!hanging)
+          acceleration.x += drag.x
       }
 
       wasJumping = jumping;
       if (FlxG.keys.justPressed("X") && (!jumping || velocity.y > 18)) {
+        hanging = false;
+
         if (!wasJumping) {
           flyVelocity = jumpVelocity
         }
@@ -88,7 +110,9 @@ package Sprites {
     }
 
     private function handleAnimation():void {
-      if (velocity.y != 0) {
+      if (hanging) {
+        play("hang");
+      } else if (velocity.y != 0) {
         play(velocity.y < 0 && wasJumping ? "jump" : "fall");
       } else if (velocity.x != 0) {
         play("run");
