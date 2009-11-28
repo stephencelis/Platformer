@@ -1,11 +1,11 @@
 package States {
   import org.flixel.*;
-  import Sprites.Mouse;
+  import Sprites.*;
 
   public class PlayState extends FlxState {
     [Embed(source = "../Resources/Block.png")] private var BlockImage:Class;
 
-    private var mouse:Mouse;
+    private var player:FlxSprite;
     private var blocks:FlxArray;
 
     override public function PlayState():void {
@@ -14,10 +14,10 @@ package States {
       blocks = new FlxArray;
       blocks.add(add(new FlxBlock(0, 116, 320, 16, BlockImage)));
 
-      mouse = new Mouse(72, 100);
-      FlxG.follow(mouse);
+      player = new Bat(72, 100);
+      FlxG.follow(player);
       FlxG.followAdjust(0.5, 0.0);
-      FlxG.followBounds(-60, 0, 380, 240);
+      FlxG.followBounds(-60, -240, 380, 240);
 
       // Avoid flickering restart after .
       if (FlxG.scroll.x > FlxG.followMin.x) FlxG.scroll.x = FlxG.followMin.x;
@@ -25,13 +25,13 @@ package States {
       if (FlxG.scroll.x < FlxG.followMax.x) FlxG.scroll.x = FlxG.followMax.x;
       if (FlxG.scroll.y < FlxG.followMax.y) FlxG.scroll.y = FlxG.followMax.y;
 
-      add(mouse);
+      add(player);
     }
 
     override public function update():void {
       super.update();
 
-      FlxG.collideArray(blocks, mouse);
+      FlxG.collideArray(blocks, player);
     }
   }
 }

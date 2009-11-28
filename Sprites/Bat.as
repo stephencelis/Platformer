@@ -2,18 +2,20 @@ package Sprites {
   import org.flixel.*;
   import States.PlayState;
 
-  public class Mouse extends FlxSprite {
-    [Embed(source = "../Resources/Mouse.png")] private var MouseImage:Class;
+  public class Bat extends FlxSprite {
+    [Embed(source = "../Resources/Bat.png")] private var BatImage:Class;
     [Embed(source = "../Resources/Footstep.mp3")] private var FootstepSound:Class;
+    [Embed(source = "../Resources/Flap.mp3")] private var FlapSound:Class;
 
-    private var runVelocity:int = 105;
+    private var runVelocity:int = 70;
     private var lastFrame:int;
-    private var jumpVelocity:int = 180;
+    private var jumpVelocity:int = 200;
     private var jumping:Boolean = false;
-    private var clawing:Boolean = false;
+    private var wasJumping:Boolean = jumping;
+    private var flyVelocity:int = jumpVelocity;
 
-    public function Mouse(x:int, y:int) {
-      super(MouseImage, x, y, true, true);
+    public function Bat(x:int, y:int) {
+      super(BatImage, x, y, true, true);
 
       // Bounding box.
       offset.x = 5;
@@ -29,9 +31,9 @@ package Sprites {
 
       // Animations.
       addAnimation("idle", [0]);
-      addAnimation("run", [1, 2, 3, 0], 15);
-      addAnimation("jump", [1]);
-      addAnimation("dead", [4], 1, false);
+      addAnimation("run", [1, 0, 2, 0], 10);
+      addAnimation("fall", [3]);
+      addAnimation("jump", [4]);
     }
 
     override public function update():void {
@@ -60,10 +62,6 @@ package Sprites {
       return super.hitFloor(contact);
     }
 
-    override public function hitWall(contact:FlxCore = null):Boolean {
-      return super.hitWall(contact);
-    }
-
     private function handleInput():void {
       if (FlxG.keys.LEFT) {
         facing = LEFT;
@@ -73,19 +71,25 @@ package Sprites {
         acceleration.x += drag.x
       }
 
-      if (!jumping && FlxG.keys.justPressed("DOWN")) {
-        clawing = !clawing;
-      }
+      wasJumping = jumping;
+      if (FlxG.keys.justPressed("X") && (!jumping || velocity.y > 18)) {
+        if (!wasJumping) {
+          flyVelocity = jumpVelocity
+        }
 
-      if (FlxG.keys.justPressed("X") && !jumping && velocity.y < 30) {
-        clawing = !(jumping = true);
-        velocity.y = -jumpVelocity;
+        var reboundVelocity:int = velocity.y - flyVelocity;
+        if (reboundVelocity < 0) {
+          jumping = true;
+          velocity.y = reboundVelocity;
+          FlxG.play(FlapSound, 0.25);
+          flyVelocity *= 0.9;
+        }
       }
     }
 
     private function handleAnimation():void {
       if (velocity.y != 0) {
-        play("jump");
+        play(velocity.y < 0 && wasJumping ? "jump" : "fall");
       } else if (velocity.x != 0) {
         play("run");
         if ((_curFrame == 1 || _curFrame == 3) && _curFrame != lastFrame) {
@@ -93,8 +97,8 @@ package Sprites {
           FlxG.play(FootstepSound, 0.75);
         }
       } else {
+        play("idle");
         lastFrame = 0;
-        play(clawing ? "run" : "idle");
       }
     }
   }
