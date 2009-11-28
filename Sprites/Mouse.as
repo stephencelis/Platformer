@@ -1,12 +1,13 @@
 package Sprites {
   import org.flixel.*;
+  import States.PlayState;
 
   public class Mouse extends FlxSprite {
     [Embed(source = "../Resources/Mouse.png")] private var MouseImage:Class;
     [Embed(source = "../Resources/Footstep.mp3")] private var FootstepSound:Class;
 
     private var runVelocity:int = 70;
-    private var _lastFrame:int;
+    private var lastFrame:int;
     private var jumpVelocity:int = 180;
     private var jumping:Boolean = false;
 
@@ -35,8 +36,12 @@ package Sprites {
     override public function update():void {
       acceleration.x = 0;
 
-      if (false) {
-        // Handle exceptions.
+      if (!dead && y > FlxG.height) {
+        kill();
+      }
+
+      if (dead) {
+        FlxG.switchState(PlayState);
       } else {
         if (FlxG.keys.LEFT) {
           facing = LEFT;
@@ -47,6 +52,8 @@ package Sprites {
         }
 
         if (FlxG.keys.justPressed("X") && !jumping && velocity.y < 30) {
+          trace("TESTING");
+
           jumping = true;
           velocity.y = -jumpVelocity;
         }
@@ -55,12 +62,12 @@ package Sprites {
           play("jump");
         } else if (velocity.x != 0) {
           play("run");
-          if ((_curFrame == 1 || _curFrame == 3) && _curFrame != _lastFrame) {
-            _lastFrame = _curFrame;
+          if ((_curFrame == 1 || _curFrame == 3) && _curFrame != lastFrame) {
+            lastFrame = _curFrame;
             FlxG.play(FootstepSound, 0.75);
           }
         } else {
-          _lastFrame = 0;
+          lastFrame = 0;
           play(FlxG.keys.DOWN ? "dead" : "idle");
         }
       }

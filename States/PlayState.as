@@ -12,10 +12,19 @@ package States {
       super();
 
       blocks = new FlxArray;
-      blocks.add(add(new FlxBlock(0, 216, 320, 16, BlockImage)));
+      blocks.add(add(new FlxBlock(0, 116, 320, 16, BlockImage)));
 
-      mouse = new Mouse(72, 200);
+      mouse = new Mouse(72, 100);
       FlxG.follow(mouse);
+      FlxG.followAdjust(0.5, 0.0);
+      FlxG.followBounds(-60, 0, 380, 240);
+
+      // Avoid flickering restart after .
+      if (FlxG.scroll.x > FlxG.followMin.x) FlxG.scroll.x = FlxG.followMin.x;
+      if (FlxG.scroll.y > FlxG.followMin.y) FlxG.scroll.y = FlxG.followMin.y;
+      if (FlxG.scroll.x < FlxG.followMax.x) FlxG.scroll.x = FlxG.followMax.x;
+      if (FlxG.scroll.y < FlxG.followMax.y) FlxG.scroll.y = FlxG.followMax.y;
+
       add(mouse);
     }
 
